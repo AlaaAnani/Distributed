@@ -42,6 +42,8 @@ class UDPSocket
     public:    
         UDPSocket ();    
         bool initializeSocket(char * _myAddr, unsigned int _myPort);
+        bool initializeSocket(unsigned int _myPort);
+        char * getMachineIP();
         int getMyPort(); 
         string getMyIP();
         void setMyPort(unsigned int _myPort);

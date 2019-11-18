@@ -18,7 +18,8 @@ int main(int argc, char ** argv)
     UDPSocket sockobj;
     struct sockaddr_in peerAddr;
 
-    bool meh = sockobj.initializeSocket(myIP, myPort);
+    bool meh = sockobj.initializeSocket(myPort);
+    cout << "MY IP" << sockobj.getMachineIP();
     cout << "finished Contrustion wtf holly shit" << endl;
     time_t meeh = 90;
     int i=0;

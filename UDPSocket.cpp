@@ -3,10 +3,37 @@
 UDPSocket :: UDPSocket ()
 {   
 }
+char * UDPSocket::getMachineIP()
+{
+    const char* google_dns_server = "8.8.8.8";
+    int dns_port = 53;
+    struct sockaddr_in serv;
+    int tempSock = socket(AF_INET, SOCK_DGRAM, 0);
+    if(tempSock < 0)
+    {
+        std::cout << "Socket error" << std::endl;
+    }
+    memset(&serv, 0, sizeof(serv));
+    serv.sin_family = AF_INET;
+    serv.sin_addr.s_addr = inet_addr(google_dns_server);
+    serv.sin_port = htons(dns_port);
 
+    int err = connect(tempSock, (const struct sockaddr*)&serv, sizeof(serv));
+        if (err < 0)
+    {
+        std::cout << "Error number: " << errno
+            << ". Error message: " << strerror(errno) << std::endl;
+    }
+    struct sockaddr_in name;
+    socklen_t namelen = sizeof(name);
+    err = getsockname(tempSock, (struct sockaddr*)&name, &namelen);
+    char * buff = new char[80];
+    const char* p = inet_ntop(AF_INET, &name.sin_addr, buff, 80);
+    close(tempSock);
+    return buff;
+}
 bool UDPSocket ::initializeSocket(char * _myAddr, unsigned int _myPort)
 { 
-    //TODO: Get socket primary IP
 
     this->sock = socket(AF_INET, SOCK_DGRAM, 0);
     if(this->sock<0)
@@ -40,7 +67,43 @@ bool UDPSocket ::initializeSocket(char * _myAddr, unsigned int _myPort)
 
     return true; 
 }
+bool UDPSocket ::initializeSocket(unsigned int _myPort)
+{
+      //TODO: Get socket primary IP
+    char * machineIP = new char[90];
+    machineIP = getMachineIP();
+    this->sock = socket(AF_INET, SOCK_DGRAM, 0);
+    if(this->sock<0)
+    {
+        perror("Initializing socket of server failed");
+        return false;
+    }
 
+    int enableReuse = 1;
+    int n = setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, &enableReuse, sizeof(enableReuse));
+    if (n < 0)
+        perror("setsockopt(SO_REUSEADDR) failed");
+
+    this->myAddress_str = string(machineIP);
+    this->myPort = _myPort;
+    this->myAddr.sin_family    = AF_INET; // IPv4
+    this->myAddr.sin_addr.s_addr = htonl(INADDR_ANY);
+    this->myAddr.sin_port = htons(_myPort);
+
+    n = bind(sock, (struct sockaddr *)&myAddr, sizeof(struct sockaddr_in));
+
+    if(n<0)
+    {
+        perror("Bind of server socket failed\n");
+        close(sock);
+        return false;
+    }
+
+    this->ReceiveThread = new thread(&UDPSocket::receiveHandler,this, this);
+    this->SendThread = new thread(&UDPSocket::sendingHandler,this, this);  
+
+    return true; 
+}
 void UDPSocket::setMyPort(unsigned int _myPort)
 {
     this->myPort = _myPort;
