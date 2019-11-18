@@ -29,7 +29,7 @@ int main(int argc, char ** argv)
     {
         getline(inputfile,input);
         book+=input;
-    } 
+    } //
     while(true)
     {
     cin >> input;
