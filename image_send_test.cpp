@@ -44,7 +44,7 @@ int main(int argc, char ** argv)
 
     char * str = new char[extract.size()];  
     strcpy(str, extract.c_str());
-    cout << "extract size" << extract.size() << endl;
+    //cout << "extract size" << extract.size() << endl;
     Message *m =new Message(Request, 1, 3, sockobj.getMyIP(), sockobj.getMyPort(), destIP, destPort, ++i, 8, extract.size(), str);
     sockobj.sendMessage(m);
     Message * newM = sockobj.receiveMsg();
@@ -60,7 +60,7 @@ int main(int argc, char ** argv)
     img = base64_decode(img);
 
     ofstream out;
-    string path = "out_img" + to_string(j++) + ".jpg";
+    string path = "out_img" + to_string(j) + ".jpg";
     out.open(path, ios_base::out | ios_base::binary);
     out << img;
     out.close();

@@ -1,0 +1,8 @@
+{
+    "files.associations": {
+        "unordered_map": "cpp",
+        "fstream": "cpp",
+        "mutex": "cpp",
+        "new": "cpp"
+    }
+}
