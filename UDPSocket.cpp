@@ -318,7 +318,7 @@ void UDPSocket::sendingHandler(UDPSocket * myUDPSocket)
                 char *msgPtr = new char [msgStr.size()+1];
                 strcpy(msgPtr, msgStr.c_str());
                 int n = sendto(myUDPSocket->sock, msgPtr, strlen(msgPtr), 0,(sockaddr*) &destAddr,sizeof(destAddr));
-                usleep(100);
+                usleep(1000);
             }  
             #ifdef DEBUG 
             #endif

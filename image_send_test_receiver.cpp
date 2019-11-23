@@ -29,6 +29,7 @@ int main(int argc, char ** argv)
     while(true)
     {
         Message * newM = sockobj.receiveMsg();
+        cout << "Received Msg of size " << newM->getMessageSize() << endl;
         if(newM != NULL)
         {
         int size = newM->getMessageSize();
@@ -41,7 +42,7 @@ int main(int argc, char ** argv)
         img = base64_decode(img);
 
         ofstream out;
-        string path = "out_img" + to_string(j++) + ".jpg";
+        string path = "out_img" + to_string(j) + ".jpg";
         out.open(path, ios_base::out | ios_base::binary);
         out << img;
         out.close();
