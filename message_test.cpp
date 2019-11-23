@@ -2,6 +2,12 @@
 // #include "Client.h"
 #include <iostream>
 #include <string>
+#include <ctime>
+#include <chrono>
+#include <sys/time.h>
+#include <unistd.h>
+#include <queue>
+using namespace std::chrono;
 using namespace std;
 // int passw(Message* m)
 // {
@@ -45,7 +51,15 @@ int main(int argc, char ** argv)
     //     int status = c.Send(m);
     //     cout << "Client main: after send" << endl;
     // }
-    Message *m =new Message(Request, 1, 3, "10.1", 3, "10.2", 6666, 9, 8, 10, "MEEEEEEEEH");
+    clock_t t1 = 0;
+
+
+    while(true)
+    {      
+    seconds ms = duration_cast< seconds >( system_clock::now().time_since_epoch());  
+
+    long long timeStamp =  ms.count();
+    Message *m = new Message(Request, 1, 3, "10.1", 3, "10.2", 6666, 9, 8, timeStamp, 10, "MEEEEEEEEH");
     char * s = new char [1024]; 
     s = m->marshal();
     Message newM(s);
@@ -60,6 +74,9 @@ int main(int argc, char ** argv)
     cout << newM.getOperation()<< endl;
     cout << newM.getMessageSize()<< endl;
     cout << newM.getMessage()<< endl;
+    cout << newM.getMessageTimestamp() << endl;
+    //usleep(1000000);
+    }
     //  bool stop = false;
     // Message *m =new Message(Request, 1, 3, "10.1", "10.2", 6666, 9, 8, 10, "MEEEEEEEEH");
     // // pass(m);

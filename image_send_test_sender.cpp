@@ -34,7 +34,11 @@ int i;
     char * str = new char[extract.size()];  
     strcpy(str, extract.c_str());
     //cout << "extract size" << extract.size() << endl;
-    Message *m =new Message(Request, 1, 3, sockobj.getMyIP(), sockobj.getMyPort(), destIP, destPort, ++i, 8, extract.size(), str);
+        seconds ms = duration_cast< seconds >(system_clock::now().time_since_epoch());  
+
+    long long timeStamp =  ms.count();
+
+    Message *m =new Message(Request, 1, 3, sockobj.getMyIP(), sockobj.getMyPort(), destIP, destPort, ++i, 8,timeStamp, extract.size(), str);
     sockobj.sendMessage(m);
     }
 

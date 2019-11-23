@@ -197,7 +197,7 @@ void UDPSocket::fragmentMsg(Message * FullMessage, vector<Message *> &frags)
 
 string UDPSocket::getMsgID(Message* message)
 {
-    string ID = message->getSourceIP() +to_string(message->getSourcePort()) +to_string(message->getRPCId());
+    string ID = message->getSourceIP() +to_string(message->getSourcePort()) +to_string(message->getRPCId()) + to_string(message->getMessageTimestamp());
     return ID;
 }
 void UDPSocket::receiveHandler(UDPSocket * myUDPSocket)
@@ -225,7 +225,8 @@ void UDPSocket::receiveHandler(UDPSocket * myUDPSocket)
     {
         int bytesAtPort = recvfrom(sock, buffer, myUDPSocket->SOCK_MAX_BUFFER_SIZE,0, (struct sockaddr*)&from, &fromlen);
 
-        if(bytesAtPort<0){
+        if(bytesAtPort<0)
+        {
             myUDPSocket->outFile<<"ReceiveHandler: receive failed";
             continue;
         }
@@ -286,7 +287,8 @@ void UDPSocket::sendingHandler(UDPSocket * myUDPSocket)
             (myUDPSocket->SendBuffer).pop();
             SendBufferMtx.unlock();
 
-
+            seconds ms = duration_cast< seconds >(system_clock::now().time_since_epoch());  
+            topMsg->setMessageTimestamp(ms.count());
             topMsg->setSourceIP(string(myUDPSocket->myAddress_str));
             topMsg->setSourcePort(myUDPSocket->getMyPort());
 
@@ -325,7 +327,7 @@ void UDPSocket::sendingHandler(UDPSocket * myUDPSocket)
 
             for(int i = 0; i <fragments.size();i++)
                 delete fragments[i];
-        fragments.clear();
+            fragments.clear();
         }
 
     }

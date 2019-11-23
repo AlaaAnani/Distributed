@@ -18,6 +18,8 @@
 #include <netinet/ip.h> 
 #include <sys/types.h>
 #include <netdb.h>
+#include <iostream>     // std::cout
+#include <chrono>       // std::chrono::seconds, std::chrono::milliseconds
 
 using namespace std;
 enum MessageType { Request, Reply, Ack};
@@ -49,12 +51,13 @@ private:
     unsigned int destPort;
     unsigned int rpc_id;
     unsigned int operation; //Which function to call on server side
-    unsigned int message_size;    
+    unsigned int message_size;   
+    long long  timeStamp; 
     char * message;         
 
 public:
 Message();
-Message(MessageType _message_type,  unsigned int _fragmentCount, unsigned int  _fragmentTotal, string _sourceIP, unsigned int _sourcePort, string _destIP, unsigned int _destPort, unsigned int _rpc_id, unsigned int _operation, long long _message_size,  char * _message);
+Message(MessageType _message_type,  unsigned int _fragmentCount, unsigned int  _fragmentTotal, string _sourceIP, unsigned int _sourcePort, string _destIP, unsigned int _destPort, unsigned int _rpc_id, unsigned int _operation, long long _timeStamp, long long _message_size,  char * _message);
 Message(char * marshalled_base64);
 char * marshal ();
 
@@ -64,6 +67,8 @@ unsigned int getFragmentCount();
 unsigned int getFragmentTotal();
 void setFragState(unsigned int curr_frag, unsigned int totalFrags);
 string getSourceIP();
+long long getMessageTimestamp();
+void setMessageTimestamp(long long _timeStamp);
 void setSourceIP(string ip);
 string getDestinationIP();
 void setDestinationIP(string ip);
