@@ -3,6 +3,18 @@
 UDPSocket :: UDPSocket ()
 {   
 }
+void UDPSocket :: setBroadcast(int s)
+{
+    int arg;
+    #ifdef  SO_BROADCAST
+    arg = 1;
+    if(setsockopt(s, SOL_SOCKET, SO_BROADCAST, &arg, sizeof(arg)) <0)
+    {
+        printf("setsockopt  SO_BROADCAST---");
+        exit(-1);
+    }
+    #endif
+}
 char * UDPSocket::getMachineIP()
 {
     const char* google_dns_server = "8.8.8.8";
@@ -41,12 +53,11 @@ bool UDPSocket ::initializeSocket(char * _myAddr, unsigned int _myPort)
         perror("Initializing socket of server failed");
         return false;
     }
-
+    setBroadcast(this->sock);
     int enableReuse = 1;
     int n = setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, &enableReuse, sizeof(enableReuse));
     if (n < 0)
         perror("setsockopt(SO_REUSEADDR) failed");
-
     this->myAddress_str = _myAddr;
     this->myPort = _myPort;
     this->myAddr.sin_family    = AF_INET; // IPv4
@@ -83,7 +94,7 @@ bool UDPSocket ::initializeSocket(unsigned int _myPort)
     int n = setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, &enableReuse, sizeof(enableReuse));
     if (n < 0)
         perror("setsockopt(SO_REUSEADDR) failed");
-
+    setBroadcast(this->sock);
     this->myAddress_str = string(machineIP);
     this->myPort = _myPort;
     this->myAddr.sin_family    = AF_INET; // IPv4
@@ -268,6 +279,7 @@ void UDPSocket::sendingHandler(UDPSocket * myUDPSocket)
         {
             myUDPSocket->SendBufferMtx.lock();     
             Message* topMsg = (myUDPSocket->SendBuffer).front();
+
             (myUDPSocket->SendBuffer).pop();
             SendBufferMtx.unlock();
 
@@ -283,9 +295,18 @@ void UDPSocket::sendingHandler(UDPSocket * myUDPSocket)
             string destIP = (topMsg->getDestinationIP());
             char *meh = new char [destIP.size()+1];
             strcpy(meh, destIP.c_str());
-            inet_aton(meh, &destAddr.sin_addr);
-            destAddr.sin_family = AF_INET;
-            destAddr.sin_addr.s_addr = htonl(INADDR_ANY);
+            //inet_aton(meh, &destAddr.sin_addr);
+            //destAddr.sin_addr.s_addr = htonl(INADDR_ANY);
+            //destAddr.sin_port = htons(topMsg->getDestinationPort());
+
+            struct hostent *host;
+            destAddr.sin_family  =  AF_INET;
+            if((host = gethostbyname(meh))== (void*)(0))
+            {
+                printf("Unknown host name\n");
+                exit(-1);
+            }
+            destAddr.sin_addr = *(struct in_addr *) (host->h_addr_list[0]);
             destAddr.sin_port = htons(topMsg->getDestinationPort());
         
             for(int i=0; i<fragments.size(); i++)
@@ -294,7 +315,7 @@ void UDPSocket::sendingHandler(UDPSocket * myUDPSocket)
                 char *msgPtr = new char [msgStr.size()+1];
                 strcpy(msgPtr, msgStr.c_str());
                 int n = sendto(myUDPSocket->sock, msgPtr, strlen(msgPtr), 0,(sockaddr*) &destAddr,sizeof(destAddr));
-                usleep(1000);
+                usleep(10000);
             }  
             #ifdef DEBUG 
             cout << "Done  sending" << endl;

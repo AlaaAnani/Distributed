@@ -42,7 +42,7 @@ int main(int argc, char ** argv)
     ifstream fin("trial.jpg",ios::binary);
     string extract = string(istreambuf_iterator<char>(fin), istreambuf_iterator<char>());
     extract = base64_encode(reinterpret_cast<const unsigned char*>(reinterpret_cast<const unsigned char*> (extract.c_str())), extract.size() + 1);
-
+    extract = "helloz";
     char * str = new char[extract.size()];  
     strcpy(str, extract.c_str());
     //cout << "extract size" << extract.size() << endl;

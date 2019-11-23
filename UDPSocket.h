@@ -19,6 +19,11 @@
 #include <unordered_map>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#include <chrono>
+#include <sys/time.h>
+#include <unistd.h>
+#include <ctime>
+
 //#define RECEIVE_OUTPUT_FILE_LOG
 //#define DEBUG
 class UDPSocket
@@ -32,6 +37,10 @@ class UDPSocket
         thread* SendThread;
         queue<Message *> ReceiveBuffer;
         queue<Message *> SendBuffer;
+        //<trials, <time_since_last_trial, message>>
+        //queue <pair<int, pair<chrono::steady_clock::time_point, Message *>>> NonRepliedRequests;
+        //queue <pair<int, pair<chrono::steady_clock::time_point, Message *>>> NonAckedReplies;
+
         mutex ReceiveBufferMtx;
         mutex SendBufferMtx;
         bool enabled = true;
@@ -40,7 +49,8 @@ class UDPSocket
         ofstream outFile;
 
     public:    
-        UDPSocket ();    
+        UDPSocket ();   
+        void setBroadcast(int s);
         bool initializeSocket(char * _myAddr, unsigned int _myPort);
         bool initializeSocket(unsigned int _myPort);
         char * getMachineIP();
