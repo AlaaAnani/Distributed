@@ -43,6 +43,7 @@ class UDPSocket
 
         mutex ReceiveBufferMtx;
         mutex SendBufferMtx;
+        bool dest= false;
         bool enabled = true;
         unsigned int FRAG_MSG_SIZE = 10000;
         unsigned int SOCK_MAX_BUFFER_SIZE = 100000;

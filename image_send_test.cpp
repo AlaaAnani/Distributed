@@ -42,13 +42,13 @@ int main(int argc, char ** argv)
     ifstream fin("trial.jpg",ios::binary);
     string extract = string(istreambuf_iterator<char>(fin), istreambuf_iterator<char>());
     extract = base64_encode(reinterpret_cast<const unsigned char*>(reinterpret_cast<const unsigned char*> (extract.c_str())), extract.size() + 1);
-    extract = "helloz";
+    //extract = "helloz";
     char * str = new char[extract.size()];  
     strcpy(str, extract.c_str());
     //cout << "extract size" << extract.size() << endl;
     Message *m =new Message(Request, 1, 3, sockobj.getMyIP(), sockobj.getMyPort(), destIP, destPort, ++i, 8, extract.size(), str);
     sockobj.sendMessage(m);
-    Message * newM = sockobj.receiveMsg();
+    /*Message * newM = sockobj.receiveMsg();
     if(newM != NULL)
     {
     int size = newM->getMessageSize();
@@ -65,7 +65,7 @@ int main(int argc, char ** argv)
     out.open(path, ios_base::out | ios_base::binary);
     out << img;
     out.close();
-    }
+    }*/
     }
 
     // while(!stop && input != "q")

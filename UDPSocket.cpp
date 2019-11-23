@@ -54,10 +54,12 @@ bool UDPSocket ::initializeSocket(char * _myAddr, unsigned int _myPort)
         return false;
     }
     setBroadcast(this->sock);
+
     int enableReuse = 1;
     int n = setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, &enableReuse, sizeof(enableReuse));
     if (n < 0)
         perror("setsockopt(SO_REUSEADDR) failed");
+
     this->myAddress_str = _myAddr;
     this->myPort = _myPort;
     this->myAddr.sin_family    = AF_INET; // IPv4
@@ -89,12 +91,13 @@ bool UDPSocket ::initializeSocket(unsigned int _myPort)
         perror("Initializing socket of server failed");
         return false;
     }
+    setBroadcast(this->sock);
 
     int enableReuse = 1;
     int n = setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, &enableReuse, sizeof(enableReuse));
     if (n < 0)
         perror("setsockopt(SO_REUSEADDR) failed");
-    setBroadcast(this->sock);
+
     this->myAddress_str = string(machineIP);
     this->myPort = _myPort;
     this->myAddr.sin_family    = AF_INET; // IPv4
@@ -145,6 +148,7 @@ bool UDPSocket::sendMessage(Message * FullMessage)
     SendBufferMtx.lock();
     SendBuffer.push(FullMessage);
     SendBufferMtx.unlock();
+    return true;
 }
 
 void UDPSocket::fragmentMsg(Message * FullMessage, vector<Message *> &frags)
@@ -188,13 +192,12 @@ void UDPSocket::fragmentMsg(Message * FullMessage, vector<Message *> &frags)
     }
 
     #ifdef DEBUG
-    cout << "Fragmentation End" << endl;
     #endif
 }
 
 string UDPSocket::getMsgID(Message* message)
 {
-    string ID = message->getSourceIP() + to_string(message->getRPCId());
+    string ID = message->getSourceIP() +to_string(message->getSourcePort()) +to_string(message->getRPCId());
     return ID;
 }
 void UDPSocket::receiveHandler(UDPSocket * myUDPSocket)
@@ -208,7 +211,7 @@ void UDPSocket::receiveHandler(UDPSocket * myUDPSocket)
     struct sockaddr_in from;
     socklen_t fromlen = sizeof(from);
     struct timeval tv;
-    tv.tv_sec = 0;
+    tv.tv_sec = 1;
     tv.tv_usec = 0;
     //Blocking recv
     setsockopt(myUDPSocket->sock, SOL_SOCKET, SO_RCVTIMEO, (const char*)&tv, sizeof tv);
@@ -218,12 +221,14 @@ void UDPSocket::receiveHandler(UDPSocket * myUDPSocket)
     #endif 
     
 
-    while(true)
+    while(!dest)
     {
         int bytesAtPort = recvfrom(sock, buffer, myUDPSocket->SOCK_MAX_BUFFER_SIZE,0, (struct sockaddr*)&from, &fromlen);
 
-        if(bytesAtPort<0)
-            printf("ReceiveHandler: receive failed");
+        if(bytesAtPort<0){
+            myUDPSocket->outFile<<"ReceiveHandler: receive failed";
+            continue;
+        }
 
         Message * currMessage = new Message(buffer);
         string msgID = myUDPSocket->getMsgID(currMessage);
@@ -260,7 +265,6 @@ void UDPSocket::receiveHandler(UDPSocket * myUDPSocket)
             char * cStrsAreMeh = new char[MsgStr.size()+1];
             strcpy(cStrsAreMeh, MsgStr.c_str());
             fullMsg->setMessage(cStrsAreMeh, MsgStr.size());
-            cout << "Fragments Complete: Received Msg of size= " << MsgStr.size();
             (myUDPSocket->ReceiveBufferMtx).lock();
             (myUDPSocket->ReceiveBuffer).push(fullMsg);
             (myUDPSocket->ReceiveBufferMtx).unlock();
@@ -273,13 +277,12 @@ void UDPSocket::receiveHandler(UDPSocket * myUDPSocket)
 void UDPSocket::sendingHandler(UDPSocket * myUDPSocket)
 {
     vector<Message *> fragments;
-    while(true)
+    while(!dest)
     {
         if(SendBuffer.size())
         {
             myUDPSocket->SendBufferMtx.lock();     
             Message* topMsg = (myUDPSocket->SendBuffer).front();
-
             (myUDPSocket->SendBuffer).pop();
             SendBufferMtx.unlock();
 
@@ -315,10 +318,9 @@ void UDPSocket::sendingHandler(UDPSocket * myUDPSocket)
                 char *msgPtr = new char [msgStr.size()+1];
                 strcpy(msgPtr, msgStr.c_str());
                 int n = sendto(myUDPSocket->sock, msgPtr, strlen(msgPtr), 0,(sockaddr*) &destAddr,sizeof(destAddr));
-                usleep(10000);
+                usleep(100);
             }  
             #ifdef DEBUG 
-            cout << "Done  sending" << endl;
             #endif
 
             for(int i = 0; i <fragments.size();i++)
@@ -330,5 +332,8 @@ void UDPSocket::sendingHandler(UDPSocket * myUDPSocket)
 }
 
 UDPSocket :: ~UDPSocket ( ){
+    dest = true;
+    ReceiveThread->join();
+    SendThread->join();
     close(sock);
 }

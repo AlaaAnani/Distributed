@@ -20,16 +20,35 @@ int main(int argc, char ** argv)
 
     bool meh = sockobj.initializeSocket(myPort);
     cout << "MY IP" << sockobj.getMachineIP();
-
+    cout << "finished Contrustion " << endl;
+    time_t meeh = 90;
+    int i=0;
+   
+    int j = 0;
+    string extract;
     while(true)
     {
-    Message * newM = sockobj.receiveMsg();
-    cout << newM->getMessage() << endl;
+        Message * newM = sockobj.receiveMsg();
+        if(newM != NULL)
+        {
+        int size = newM->getMessageSize();
+        char *c = new char[size];
+        c = newM->getMessage();
+        int i=0;
+        string img;
+        while(size--)
+        img+=c[i++];
+        img = base64_decode(img);
 
+        ofstream out;
+        string path = "out_img" + to_string(j++) + ".jpg";
+        out.open(path, ios_base::out | ios_base::binary);
+        out << img;
+        out.close();
+        
+        }
 
     }
-
-
 
     return 0;
 }
